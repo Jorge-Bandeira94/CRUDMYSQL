@@ -1,0 +1,199 @@
+Para usarmos o terminal e testar nossas funções, usamos a aba temrinal do pycharm
+e navegamos até a pasta que desejamos através do comando cd nomedapasta. Ao chegar
+na pastar desejada podemos iniciar o python com o comando python e testar a função
+desejada.
+Testando a função recém criada listar():
+
+>>> from utils import listar
+>>> listar()
+Listando produtos...
+Conectando ao servidor...
+Não existem produtos cadastrados
+Desconectando do servidor...
+>>>
+
+Podemos ver que importamos do arquivo utils a função (o arquivo onde ela esta escrita)
+e a executamos em seguida. As mensagens mostram que foi executada a conexão ao servidor
+que vemos no inicio da função: 
+
+def listar():
+
+    print('Listando produtos...')
+
+    conn = conectar()
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM produtos')
+    produtos = cursor.fetchall()
+
+    if len(produtos) > 0:
+        print('Listando produtos...')
+        print('....................')
+        for produto in produtos:
+            print(f'ID: {produto[0]}')
+            print(f'Produto: {produto[1]}')
+            print(f'Preco: {produto[2]}')
+            print(f'Estoque: {produto[3]}')
+            print('................')
+    else:
+        print("Não existem produtos cadastrados")
+
+    desconectar(conn)
+
+A mensagem exibida "Conectando ao servidor..." advém da função programada conn que foi configurada anteriormente.
+por isso ao ser executada também exibe sua mensgaem. Assim como a função desconectar(0 exibe a sua ao final
+Sempre, ao configurar as demais funções, precisamos começar pela conexão, que é o que nos dará acesso aos dados
+do banco. Além disso, também precisamos do cursos para executar nossas ações.
+
+---- Criando a função de inserção de dados
+
+def inserir():
+
+    print('Inserindo produto...')
+    conn = conectar()
+    cursor = conn.cursor()
+
+    nome = input('Informe o nome do produto: ')
+    preco = float(input('Informe o preço do produto: '))
+    estoque = int(input('Informe a quantidade em estoque: '))
+
+    cursor.execute(f"INSERT INTO produtos (nome, preco, estoque) VALUES ('{nome}', {preco}, {estoque})")
+    conn.commit()
+    if cursor.rowcount == 1:
+        print(f'O produtos {nome} foi inserido com sucesso')
+    else:
+        print('Não foi possível inserir o produtos')
+    desconectar(conn)
+
+
+Quando executamos essa função no terminar e a preenchemos recebemos a seguinte mensgaem:
+
+>>> from utils import inserir
+>>> inserir()
+Inserindo produto...
+Conectando ao servidor...
+Informe o nome do produto: switch
+Informe o preço do produto: 2300
+Informe a quantidade em estoque 10
+O produtos switch foi inserido com sucesso
+Desconectando do servidor...
+
+Aqui, mais uma vez, vemos conn sendo executado inicialmente e desconectar() sendo executado ao final
+Pudemos receber a mensagem de sucesos ao inserir o produto pois o cursos identificou uma linha anotada no banco que
+foi os dados que inserimos. Podemos agora usar o listar() para verificar nosso dados por esta função:
+
+>>> from utils import listar
+>>> listar()
+Conectando ao servidor...
+Listando produtos...
+....................
+ID: 1
+Produto: switch
+Preco: 2300.00
+Estoque: 10
+................
+Desconectando do servidor...
+
+--- Atualizando um produto
+
+Aqui usamos as informações anteriores como fornecer a conexão ao banco com conn = conectar()
+e criar um cursos. Neste caso iremos mudar variaveis e usar os comandos de UPDATE da linguagem SQL.
+Nosso codigo segue da seguinte forma:
+
+def atualizar():
+
+    print('Atualizando produto...')
+    conn = conectar()
+    cursor = conn.cursor()
+
+    codigo = int(input('Informe o código do produto: '))
+    nome = input('Novo nome do produto: ')
+    preco = float(input('Informe o novo preço: '))
+    estoque = int(input('informe a nova quantidade em estoque: '))
+
+    cursor.execute(f"UPDATE produtos SET nome= '{nome}', preco={preco}, estoque={estoque} WHERE id={codigo}")
+    conn.commit()
+
+    if cursor.rowcount == 1:
+        print(f'O produto foi atualizado com sucesso')
+    else:
+        print('Erro na atualização do produto')
+    desconectar(conn)
+
+Ao executarmos esta função no temrinal temos como retorno a mensagem:
+
+>>> from utils import atualizar
+>>> atualizar()
+Atualizando produto...
+Conectando ao servidor...
+Informe o código do produto: 1
+Novo nome do produto: Playstation 4
+Informe o novo preço: 2800
+informe a nova quantidade em estoque: 16
+O produto foi atualizado com sucesso
+Desconectando do servidor...
+
+
+Agora que a atualização foi executada, espermaos que o playstation 4 tenha substituido a informação anterior
+cadastrada que estava para Switch, ao usarmos a função listar() recebemos como resposta:
+
+>>> from utils import listar
+>>> listar()
+Conectando ao servidor...
+Listando produtos...
+....................
+ID: 1
+Produto: Playstation 4
+Preco: 2800.00
+Estoque: 16
+................
+Desconectando do servidor...
+
+Assim, percebemos que a função funcionou corretamente. Podemos também conferir estes dados diretamente na
+plataforma do MySQL workbench.
+
+--- Deletando um dado
+
+def deletar():
+
+    print('Deletando produto...')
+    conn = conectar()
+    cursor = conn.cursor()
+
+    codigo = int(input('Digite o codigo do produto que deseja apagar: '))
+
+    cursor.execute(f'DELETE FROM produtos WHERE id ={codigo}')
+    conn.commit()
+
+    if cursor.crowcount == 1:
+        print('Produto deletado')
+    else:
+        print('Não foi possível deletar este produto')
+    desconectar(conn)
+
+------------------
+
+O menu inicial que utilizara dessas funções deve ser configurado para que associe alguma entrada a função, desta forma
+fizemos com numero da seguinte forma: se o usuário digita 1 ele irá desencadear a função para este valor
+
+def menu():
+
+    print('=========Gerenciamento de Produtos==============')
+    print('Selecione uma opção: ')
+    print('1 - Listar produtos.')
+    print('2 - Inserir produtos.')
+    print('3 - Atualizar produto.')
+    print('4 - Deletar produto.')
+    opcao = int(input())
+    if opcao in [1, 2, 3, 4]:
+        if opcao == 1:
+            listar()
+        elif opcao == 2:
+            inserir()
+        elif opcao == 3:
+            atualizar()
+        elif opcao == 4:
+            deletar()
+        else:
+            print('Opção inválida')
+    else:
+        print('Opção inválida')
